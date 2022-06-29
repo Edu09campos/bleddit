@@ -16,9 +16,18 @@ import {
   Flex,
   Icon,
 } from "@chakra-ui/react";
+import {
+  doc,
+  getDoc,
+  runTransaction,
+  serverTimestamp,
+  setDoc,
+} from "firebase/firestore";
 import React, { useState } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
 import { BsFillEyeFill, BsFillPersonFill } from "react-icons/bs";
 import { HiLockClosed } from "react-icons/hi";
+import { auth, firestore } from "../../../firebase/clientApp";
 
 type Props = {
   open: boolean;
@@ -26,9 +35,12 @@ type Props = {
 };
 
 const CreateCommunityModal = ({ open, handleClose }: Props) => {
+  const [user] = useAuthState(auth);
   const [communityName, setCommunityName] = useState("");
   const [charsRemaining, setCharsRemaining] = useState(21);
   const [communityType, setCommunityType] = useState("public");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.value.length > 21) return;
@@ -41,6 +53,59 @@ const CreateCommunityModal = ({ open, handleClose }: Props) => {
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     setCommunityType(event.target.name);
+  };
+
+  const handleCreateCommunity = async () => {
+    const format = /[ `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
+
+    if (error) setError("");
+
+    if (format.test(communityName)) {
+      setError(
+        "Community names must only contain letters numbers and underscores."
+      );
+      return;
+    }
+
+    if (communityName.length < 3) {
+      setError("Community names must have at least 3 charactes.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const communityDocRef = doc(firestore, "communities", communityName);
+
+      await runTransaction(firestore, async (transaction) => {
+        const communityDoc = await transaction.get(communityDocRef);
+        if (communityDoc.exists()) {
+          throw new Error(
+            `Community name r/${communityName} already taken! Try another.`
+          );
+        }
+
+        transaction.set(communityDocRef, {
+          creatorId: user?.uid,
+          createdAt: serverTimestamp(),
+          numberOfMembers: 1,
+          privacyType: communityType,
+        });
+
+        transaction.set(
+          doc(firestore, `users/${user?.uid}/communitySnippets`, communityName),
+          {
+            communityId: communityName,
+            isModerator: true,
+          }
+        );
+      });
+    } catch (error: any) {
+      console.log("[handleCreateCommunity] ERROR >>> " + error);
+      setError(error.message);
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -87,6 +152,9 @@ const CreateCommunityModal = ({ open, handleClose }: Props) => {
                 fontSize="9pt"
               >
                 {charsRemaining} Characters remaining.
+              </Text>
+              <Text fontSize="9pt" color="red" pt={1}>
+                {error}
               </Text>
               <Box mt={4} mb={4}>
                 <Text fontWeight={600} fontSize={15}>
@@ -153,7 +221,11 @@ const CreateCommunityModal = ({ open, handleClose }: Props) => {
             >
               Cancel
             </Button>
-            <Button height="30px" onClick={() => {}}>
+            <Button
+              height="30px"
+              onClick={handleCreateCommunity}
+              isLoading={loading}
+            >
               Create a new Bleddit Community
             </Button>
           </ModalFooter>
