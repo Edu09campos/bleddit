@@ -8,6 +8,7 @@ import NotFound from "../../../components/community/notFound";
 import Header from "../../../components/community/header";
 import PageContent from "../../../components/layouts/pageContent";
 import CreatePostLink from "../../../components/community/createPostLink";
+import Posts from "../../../components/posts/posts";
 
 type Props = {
   communityData: Community;
@@ -24,6 +25,7 @@ const CommunityPage = ({ communityData }: Props) => {
       <PageContent>
         <>
           <CreatePostLink />
+          <Posts communityData={communityData} />
         </>
         <></>
       </PageContent>
