@@ -76,14 +76,14 @@ const NewPostForm = ({ user }: Props) => {
           imageURL: downloadURL,
         });
       }
+
+      router.back();
     } catch (error: any) {
       console.log("[handleCreatePost] ERROR >>> ", error.message);
       setError(true);
     }
 
     setLoading(false);
-
-    //router.back();
   };
 
   const onSelectImage = (event: React.ChangeEvent<HTMLInputElement>) => {
