@@ -1,7 +1,7 @@
 import { doc, getDoc } from "firebase/firestore";
 import { GetServerSidePropsContext } from "next";
-import React from "react";
-import { Community } from "../../../atoms/communitiesAtom";
+import React, { useEffect } from "react";
+import { Community, communityState } from "../../../atoms/communitiesAtom";
 import { firestore } from "../../../firebase/clientApp";
 import safeJsonStringify from "safe-json-stringify";
 import NotFound from "../../../components/community/notFound";
@@ -9,15 +9,28 @@ import Header from "../../../components/community/header";
 import PageContent from "../../../components/layouts/pageContent";
 import CreatePostLink from "../../../components/community/createPostLink";
 import Posts from "../../../components/posts/posts";
+import { useSetRecoilState } from "recoil";
+import About from "../../../components/community/about";
 
 type Props = {
   communityData: Community;
 };
 
 const CommunityPage = ({ communityData }: Props) => {
+  const setCommunityStateValue = useSetRecoilState(communityState);
+
   if (!communityData) {
     return <NotFound />;
   }
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    setCommunityStateValue((prev) => ({
+      ...prev,
+      currentCommunity: communityData,
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
@@ -27,7 +40,9 @@ const CommunityPage = ({ communityData }: Props) => {
           <CreatePostLink />
           <Posts communityData={communityData} />
         </>
-        <></>
+        <>
+          <About communityData={communityData} />
+        </>
       </PageContent>
     </>
   );

@@ -11,15 +11,25 @@ import {
   IoArrowUpCircleSharp,
   IoBookmarkOutline,
 } from "react-icons/io5";
-import { Flex, Icon, Stack, Text, Image, Skeleton } from "@chakra-ui/react";
+import {
+  Flex,
+  Icon,
+  Stack,
+  Text,
+  Image,
+  Skeleton,
+  Spinner,
+  Alert,
+  AlertIcon,
+} from "@chakra-ui/react";
 import moment from "moment";
 
 type Props = {
   post: Post;
   userIsCreator: boolean;
   userVoteValue?: number;
-  onVote: () => void;
-  onDeletePost: () => void;
+  onVote: (post: Post, vote: number, communityId: string) => void;
+  onDeletePost: (post: Post) => Promise<boolean>;
   onSelectPost: () => void;
 };
 
@@ -32,6 +42,24 @@ const PostItem = ({
   onVote,
 }: Props) => {
   const [loadingImage, setLoadingImage] = useState(true);
+  const [loadingDelete, setLoadingDelete] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleDelete = async () => {
+    setLoadingDelete(true);
+    try {
+      const success = await onDeletePost(post);
+
+      if (!success) {
+        throw new Error("Failed to delete Post!");
+      }
+    } catch (error: any) {
+      console.log("[handleDelete] ERROR >>> ", error.message);
+      setError(error.message);
+    }
+    setLoadingDelete(false);
+  };
+
   return (
     <Flex
       border="1px solid"
@@ -56,10 +84,12 @@ const PostItem = ({
           }
           color={userVoteValue === 1 ? "brand.100" : "gray.400"}
           fontSize={22}
-          onClick={onVote}
+          onClick={() => onVote(post, 1, post.communityId)}
           cursor="pointer"
         />
-        <Text fontSize="9pt">{post.voteStatus}</Text>
+        <Text fontSize="10pt" fontWeight={600}>
+          {post.voteStatus}
+        </Text>
         <Icon
           as={
             userVoteValue === -1
@@ -68,11 +98,17 @@ const PostItem = ({
           }
           color={userVoteValue === -1 ? "#4379ff" : "gray.400"}
           fontSize={22}
-          onClick={onVote}
+          onClick={() => onVote(post, -1, post.communityId)}
           cursor="pointer"
         />
       </Flex>
       <Flex direction="column" width="100%">
+        {error && (
+          <Alert status="error">
+            <AlertIcon />
+            <Text mr={2}>{error}!</Text>
+          </Alert>
+        )}
         <Stack spacing={1} p="10px">
           <Stack direction="row" spacing={0.6} align="center" fontSize="9pt">
             <Text>
@@ -138,10 +174,17 @@ const PostItem = ({
               borderRadius={4}
               _hover={{ bg: "gray.200" }}
               cursor="pointer"
-              onClick={onDeletePost}
+              onClick={handleDelete}
             >
-              <Icon as={AiOutlineDelete} mr={2} />
-              <Text fontSize="9pt">Delete</Text>
+              {loadingDelete ? (
+                <Spinner size="sm" />
+              ) : (
+                <>
+                  {" "}
+                  <Icon as={AiOutlineDelete} mr={2} />
+                  <Text fontSize="9pt">Delete</Text>{" "}
+                </>
+              )}
             </Flex>
           )}
         </Flex>
