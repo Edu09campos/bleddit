@@ -30,7 +30,7 @@ const CommunityPage = ({ communityData }: Props) => {
       currentCommunity: communityData,
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [communityData]);
 
   return (
     <>
