@@ -49,6 +49,7 @@ const useDirectory = () => {
         },
       }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [communityStateValue.currentCommunity]);
 
   return { directoryState, toggleMenuOpen, onSelectMenuItem };

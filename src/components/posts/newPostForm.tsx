@@ -20,6 +20,7 @@ import TabItem from "./tabItem";
 
 type Props = {
   user: User;
+  communityImageURL?: string;
 };
 
 const formTabs: TabItem[] = [
@@ -32,7 +33,7 @@ export type TabItem = {
   icon: typeof Icon.arguments;
 };
 
-const NewPostForm = ({ user }: Props) => {
+const NewPostForm = ({ user, communityImageURL }: Props) => {
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState(formTabs[0].title);
   const [textInputs, setTextInputs] = useState({
@@ -48,6 +49,7 @@ const NewPostForm = ({ user }: Props) => {
     const { communityId } = router.query;
     const post: Post = {
       communityId: communityId as string,
+      communityImageURL: communityImageURL || "",
       creatorId: user?.uid,
       creatorDisplayName: user.email!.split("@")[0],
       title: textInputs.title,
